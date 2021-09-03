@@ -43,7 +43,8 @@ class App {
 
 mongoose.connect(process.env.MONGODB_CONNECT ?? '', {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
+  useFindAndModify: false
 })
   .then(() => console.log('Database connection is ready'))
   .catch((err) => console.log(err));
