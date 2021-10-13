@@ -1,4 +1,4 @@
-import { Document, Schema, model, Types, ObjectId } from 'mongoose';
+import { Document, Schema, model, Types } from 'mongoose';
 
 export interface Product {
   name: string;
@@ -8,7 +8,7 @@ export interface Product {
   images: string[];
   brand: string;
   price: number;
-  category: ObjectId,
+  category: Types.ObjectId,
   countInStock: number;
   rating: number;
   numOfReviews: number;
@@ -73,6 +73,14 @@ const schema = new Schema<ProductDocument>({
     type: Date,
     default: Date.now
   }
+});
+
+schema.virtual('id').get(function (this: ProductDocument) {
+  return this._id.toHexString();
+});
+
+schema.set('toJSON', {
+  virtuals: true
 });
 
 export const ProductModel = model<ProductDocument>('Product', schema);
