@@ -3,6 +3,7 @@ import morgan from 'morgan';
 import dotenv from "dotenv";
 import mongoose from 'mongoose';
 import cors from 'cors';
+import jwt from 'express-jwt';
 import { ProductsController } from './controllers/products.controller';
 import { CategoriesController } from './controllers/categories.controller';
 import { OrdersController } from './controllers/orders.controller';
@@ -38,6 +39,10 @@ class App {
     this.app.use(express.json());
     this.app.use(morgan('tiny'));
     this.app.use(cors());
+    this.app.use(jwt({
+      secret: process.env.JWT_SECRET || 'secret',
+      algorithms: ['HS256']
+    }))
   }
 }
 
