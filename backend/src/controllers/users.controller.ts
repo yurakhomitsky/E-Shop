@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { hash, genSalt, compareSync } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
+import { Error, FilterQuery, isValidObjectId, Types } from 'mongoose';
 import { Controller } from '../interfaces/controller.interface';
 import { UserModel } from '../models/user';
 
@@ -68,13 +69,30 @@ export class UsersController implements Controller {
     }
   }
 
+  public async delete(request: Request, response: Response): Promise<void> {
+    try {
+
+      if (!isValidObjectId(request.params.id)) {
+        throw new Error('Object id is invalid');
+      }
+
+      await UserModel.findByIdAndDelete(request.params.id).orFail(new Error('The user could not be deleted'));
+      response.status(200).json({ success: true, message: 'The user has been deleted' });
+
+    } catch ({ message }) {
+      response.status(400).json({ success: false, message });
+    }
+  }
+
   public async signIn(request: Request, response: Response) {
     try {
+      console.log(request.body);
       const user = await UserModel.findOne({ email: request.body.email }).orFail(new Error('The user not found'));
 
       if (compareSync(request.body.password, user.password)) {
         const token = sign({
-          userId: user.id
+          userId: user.id,
+          isAdmin: user.isAdmin
         },
           process.env.JWT_SECRET as string,
           {
@@ -112,6 +130,16 @@ export class UsersController implements Controller {
     }
   };
 
+  public async getUserCount(request: Request, response: Response): Promise<void> {
+    try {
+      const count = await UserModel.countDocuments((count) => count).orFail(new Error('There are no users yet'));
+      response.status(200).json({ count });
+
+    } catch ({ message }) {
+      response.status(404).json({ success: false, message });
+    }
+  }
+
   public hashPassword(password: string, salt: string): Promise<string> {
     return hash(password, salt);
   }
@@ -119,6 +147,7 @@ export class UsersController implements Controller {
   private initRoutes(): void {
     this.router.get(this.path, this.findAll);
     this.router.get(`${this.path}/:id`, this.findById);
+    this.router.get(`${this.path}/count`, this.getUserCount);
     this.router.post(this.path, this.create.bind(this));
     this.router.put(`${this.path}/:id`, this.update.bind(this));
     this.router.post(`${this.path}/login`, this.signIn.bind(this));

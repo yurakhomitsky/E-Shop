@@ -6,6 +6,7 @@ import { Order } from '../models/order';
 export class OrdersController implements Controller {
   public path = '/orders';
   public router = express.Router();
+
   constructor() {
     this.initRoutes();
   }
